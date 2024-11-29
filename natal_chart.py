@@ -5,6 +5,7 @@ from timezonefinder import TimezoneFinder
 
 
 def degrees_to_dms(degrees):
+    """Convert decimal degrees to DMS (Degrees, Minutes, Seconds) format."""
     d = int(degrees)
     m = int((degrees - d) * 60)
     s = (degrees - d - m / 60) * 3600
@@ -12,6 +13,7 @@ def degrees_to_dms(degrees):
 
 
 def degrees_to_zodiac(degrees):
+    """Convert decimal degrees to Zodiac position."""
     signs = [
         "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra",
         "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
@@ -22,6 +24,7 @@ def degrees_to_zodiac(degrees):
 
 
 def get_timezone(lat, lon):
+    """Retrieve timezone for a given latitude and longitude."""
     tz_finder = TimezoneFinder()
     timezone_str = tz_finder.timezone_at(lat=lat, lng=lon)
     if not timezone_str:
@@ -61,7 +64,7 @@ def calculate_natal_chart(dob, tob, lat, lon):
 
         positions = {}
         for body, code in bodies.items():
-            position, _ = swe.calc_ut(julian_day, code)  # Extract first value of tuple
+            position, _ = swe.calc_ut(julian_day, code)  # Extract first element of the tuple
             positions[body] = degrees_to_zodiac(position)
         return positions
 
