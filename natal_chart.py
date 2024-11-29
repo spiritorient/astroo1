@@ -3,11 +3,13 @@ import pytz
 import swisseph as swe
 from timezonefinder import TimezoneFinder
 
+
 def degrees_to_dms(degrees):
     d = int(degrees)
     m = int((degrees - d) * 60)
     s = (degrees - d - m / 60) * 3600
     return f"{d}° {m}' {s:.2f}\""
+
 
 def degrees_to_zodiac(degrees):
     signs = [
@@ -18,18 +20,19 @@ def degrees_to_zodiac(degrees):
     position_in_sign = degrees % 30
     return f"{degrees_to_dms(position_in_sign)} {sign}"
 
+
 def get_timezone(lat, lon):
     tz_finder = TimezoneFinder()
     timezone_str = tz_finder.timezone_at(lat=lat, lng=lon)
+    if not timezone_str:
+        raise ValueError("Could not determine timezone for the given location.")
     return timezone_str
+
 
 def calculate_natal_chart(dob, tob, lat, lon):
     try:
         local_dt = datetime.datetime.strptime(f'{dob} {tob}', '%d.%m.%Y %H:%M')
         timezone_str = get_timezone(lat, lon)
-        if timezone_str is None:
-            raise ValueError("Could not determine timezone for the given location.")
-
         local_tz = pytz.timezone(timezone_str)
         local_dt = local_tz.localize(local_dt)
         utc_dt = local_dt.astimezone(pytz.utc)
@@ -42,11 +45,7 @@ def calculate_natal_chart(dob, tob, lat, lon):
             'Neptune': swe.NEPTUNE, 'Pluto': swe.PLUTO,
         }
 
-        positions = {}
-        for body, code in bodies.items():
-            position, _ = swe.calc_ut(julian_day, code)
-            positions[body] = degrees_to_zodiac(position[0])
-
+        positions = {body: degrees_to_zodiac(swe.calc_ut(julian_day, code)[0]) for body, code in bodies.items()}
         return positions
     except Exception as e:
         raise RuntimeError(f"Error calculating natal chart: {e}")
