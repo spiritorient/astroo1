@@ -213,6 +213,24 @@
             <button id="copyButton" style="display:none;">Copy to Clipboard</button>
     </div>
 
+    <div class="form-group">
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate" name="startDate" required>
+</div>
+<div class="form-group">
+    <label for="endDate">End Date:</label>
+    <input type="date" id="endDate" name="endDate" required>
+</div>
+<div class="form-group">
+    <label for="intervalHours">Interval (Hours):</label>
+    <input type="number" id="intervalHours" name="intervalHours" value="6">
+</div>
+<button id="transitWaveformButton" type="button">Generate Transit Waveform</button>
+
+<div class="container">
+    <canvas id="waveformChart" width="800" height="400"></canvas>
+</div>
+
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script>
@@ -328,6 +346,97 @@
                         }
                     }
                 </script>
+    <script>
+    document.getElementById('transitWaveformButton').addEventListener('click', function () {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const intervalHours = document.getElementById('intervalHours').value;
+
+        // Placeholder natal positions, replace with actual data if needed
+        const natalPositions = {
+            'Sun': 120.5, // Example values, replace dynamically if available
+            'Moon': 250.7,
+            'Mercury': 90.3,
+            'Venus': 210.8,
+            'Mars': 300.5,
+            'Jupiter': 40.7,
+            'Saturn': 100.2,
+            'Uranus': 180.3,
+            'Neptune': 270.4,
+            'Pluto': 60.8,
+        };
+
+        fetch('/calculate_transit_waveform', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                startDate,
+                endDate,
+                intervalHours: parseInt(intervalHours, 10),
+                natalPositions, // Replace with dynamic data if needed
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    console.log('Transit Waveform Data:', data.waveform);
+                    renderWaveformChart(data.waveform); // Render the data
+                } else {
+                    console.error('Error:', data.error);
+                }
+            })
+            .catch((error) => console.error('Fetch error:', error));
+    });
+
+    function renderWaveformChart(waveform) {
+        const ctx = document.getElementById('waveformChart').getContext('2d');
+
+        const datasets = Object.keys(waveform.transits).map((planet) => ({
+            label: planet,
+            data: waveform.transits[planet].map((value, index) => ({
+                x: new Date(waveform.timeline[index][0], waveform.timeline[index][1] - 1, waveform.timeline[index][2]),
+                y: value,
+            })),
+            borderColor: getRandomColor(),
+            fill: false,
+        }));
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets,
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        title: {
+                            display: true,
+                            text: 'Date',
+                        },
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Degrees (Longitude)',
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    function getRandomColor() {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+</script>
 
      </body>
  </html>

@@ -217,3 +217,29 @@ if __name__ == '__main__':
     if not os.path.exists('static'):
         os.makedirs('static')
     app.run(debug=True)
+    
+@app.route('/calculate_transit_waveform', methods=['POST'])
+def calculate_transit_waveform():
+    data = request.json
+    if not data:
+        return jsonify({'error': 'Invalid request data'}), 400
+
+    # Extract parameters
+    start_date = data.get('startDate')
+    end_date = data.get('endDate')
+    natal_positions = data.get('natalPositions')  # Expect degrees as floats
+
+    if not start_date or not end_date or not natal_positions:
+        return jsonify({'error': 'Missing required parameters'}), 400
+
+    try:
+        # Call the transit waveform calculation function
+        transit_waveform = natal_chart.calculate_transit_waveform(
+            natal_positions=natal_positions,
+            start_date=start_date,
+            end_date=end_date,
+            interval_hours=data.get('intervalHours', 6)
+        )
+        return jsonify({'success': True, 'waveform': transit_waveform})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
