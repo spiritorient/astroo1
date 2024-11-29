@@ -30,22 +30,40 @@ def get_timezone(lat, lon):
 
 
 def calculate_natal_chart(dob, tob, lat, lon):
+    """
+    Calculate a natal chart given date/time of birth and location.
+
+    Args:
+        dob (str): Date of birth in the format 'DD.MM.YYYY'.
+        tob (str): Time of birth in the format 'HH:MM'.
+        lat (float): Latitude of the birth location.
+        lon (float): Longitude of the birth location.
+
+    Returns:
+        dict: Planetary positions in the zodiac.
+    """
     try:
-        local_dt = datetime.datetime.strptime(f'{dob} {tob}', '%d.%m.%Y %H:%M')
+        # Convert local time to UTC and calculate Julian day
+        local_dt = datetime.datetime.strptime(f"{dob} {tob}", "%d.%m.%Y %H:%M")
         timezone_str = get_timezone(lat, lon)
         local_tz = pytz.timezone(timezone_str)
         local_dt = local_tz.localize(local_dt)
         utc_dt = local_dt.astimezone(pytz.utc)
         julian_day = swe.julday(utc_dt.year, utc_dt.month, utc_dt.day, utc_dt.hour + utc_dt.minute / 60.0)
-        swe.set_topo(lon, lat, 0)
 
+        # Calculate planetary positions
+        swe.set_topo(lon, lat, 0)
         bodies = {
-            'Sun': swe.SUN, 'Moon': swe.MOON, 'Mercury': swe.MERCURY, 'Venus': swe.VENUS,
-            'Mars': swe.MARS, 'Jupiter': swe.JUPITER, 'Saturn': swe.SATURN, 'Uranus': swe.URANUS,
-            'Neptune': swe.NEPTUNE, 'Pluto': swe.PLUTO,
+            "Sun": swe.SUN, "Moon": swe.MOON, "Mercury": swe.MERCURY, "Venus": swe.VENUS,
+            "Mars": swe.MARS, "Jupiter": swe.JUPITER, "Saturn": swe.SATURN, "Uranus": swe.URANUS,
+            "Neptune": swe.NEPTUNE, "Pluto": swe.PLUTO,
         }
 
-        positions = {body: degrees_to_zodiac(swe.calc_ut(julian_day, code)[0]) for body, code in bodies.items()}
+        positions = {}
+        for body, code in bodies.items():
+            position, _ = swe.calc_ut(julian_day, code)  # Extract first value of tuple
+            positions[body] = degrees_to_zodiac(position)
         return positions
+
     except Exception as e:
         raise RuntimeError(f"Error calculating natal chart: {e}")
