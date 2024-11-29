@@ -4,9 +4,12 @@ import matplotlib.pyplot as plt
 import natal_chart  # Reuse your natal_chart module for transit position calculations
 
 # Define planets, aspects, and orbs
-planets = ["Jupiter", "Mars", "Mercury", "Moon", "Neptune", "Pluto", "Saturn", "Sun", "Uranus", "Venus"]
-aspects = {"Conjunction": 0, "Opposition": 180, "Trine": 120, "Square": 90, "Sextile": 60}
-orb = {"Conjunction": 8, "Opposition": 8, "Trine": 8, "Square": 8, "Sextile": 6}
+planets = ["Jupiter", "Mars", "Mercury", "Moon", "Neptune", "Pluto",
+           "Saturn", "Sun", "Uranus", "Venus"]
+aspects = {"Conjunction": 0, "Opposition": 180, "Trine": 120,
+           "Square": 90, "Sextile": 60}
+orb = {"Conjunction": 8, "Opposition": 8, "Trine": 8,
+       "Square": 8, "Sextile": 6}
 
 def calculate_transit_waveforms(natal_positions, start_date, end_date):
     """
@@ -38,11 +41,9 @@ def calculate_transit_waveforms(natal_positions, start_date, end_date):
                         print(f"Transit: {transits[-1]}")
 
         current_date += timedelta(days=1)
-        
-    return transits
 
     print(f"Total transits calculated: {len(transits)}")
-
+    return transits
 
 def generate_transit_waveform_plot(transits, start_date, end_date):
     """
@@ -50,14 +51,15 @@ def generate_transit_waveform_plot(transits, start_date, end_date):
     """
     print("Generating transit waveform plot...")
     dates = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
-    intensity_data = {f"{t['transiting_planet']} {t['aspect']} {t['natal_planet']}": [0] * len(dates) for t in transits}
-
+    intensity_data = {}
     for t in transits:
-        index = (t['date'] - start_date).days
         key = f"{t['transiting_planet']} {t['aspect']} {t['natal_planet']}"
+        if key not in intensity_data:
+            intensity_data[key] = [0] * len(dates)
+        index = (t['date'] - start_date).days
         intensity_data[key][index] = t['intensity']
 
-    print(f"Prepared intensity data: {intensity_data}")
+    print(f"Prepared intensity data.")
 
     fig, ax = plt.subplots(figsize=(12, 6))
     for label, intensity in intensity_data.items():

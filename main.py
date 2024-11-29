@@ -14,8 +14,10 @@ import transit_waveforms  # Transit waveform calculation module
 app = Flask(__name__)
 
 # Define the planets and zodiac signs
-planets = ["Jupiter", "Mars", "Mercury", "Moon", "Neptune", "Pluto", "Saturn", "Sun", "Uranus", "Venus"]
-zodiac_signs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
+planets = ["Jupiter", "Mars", "Mercury", "Moon", "Neptune",
+           "Pluto", "Saturn", "Sun", "Uranus", "Venus"]
+zodiac_signs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+                "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
 
 # Planet symbols in Unicode
 planet_symbols = {
@@ -48,6 +50,7 @@ orb = {
 }
 
 # --- ROUTES ---
+
 
 @app.route('/')
 def index():
@@ -88,8 +91,12 @@ def generate_zodiac_plot():
     """
     try:
         data = request.json
-        positions = data.get('positions')  # Expecting {planet: degrees}
+        positions = data.get('positions')  # Expecting {planet: position strings}
         selected_aspects = data.get('aspects', [])
+
+        # Convert position strings to degrees
+        for planet, pos_str in positions.items():
+            positions[planet] = convert_to_degrees(pos_str)
 
         # Generate plots
         plot_url = generate_plot(positions)
@@ -108,18 +115,25 @@ def transit_waveforms_route():
     """
     try:
         data = request.json
-        natal_chart_positions = data.get('natal_chart')  # Natal chart as {planet: degrees}
+        natal_chart_positions = data.get('natal_chart')  # Natal chart as {planet: position strings}
         start_date = datetime.strptime(data.get('start_date'), '%Y-%m-%d')
         end_date = datetime.strptime(data.get('end_date'), '%Y-%m-%d')
 
         if not natal_chart_positions or not start_date or not end_date:
             return jsonify({'error': 'Invalid input data'}), 400
 
+        # Convert natal chart positions from strings to degrees
+        natal_positions = {}
+        for planet, pos_str in natal_chart_positions.items():
+            natal_positions[planet] = convert_to_degrees(pos_str)
+
         # Use the transit_waveforms module for calculations
-        transits = transit_waveforms.calculate_transit_waveforms(natal_chart_positions, start_date, end_date)
+        transits = transit_waveforms.calculate_transit_waveforms(
+            natal_positions, start_date, end_date)
 
         # Generate waveform plot
-        plot_url = transit_waveforms.generate_transit_waveform_plot(transits, start_date, end_date)
+        plot_url = transit_waveforms.generate_transit_waveform_plot(
+            transits, start_date, end_date)
         return jsonify({'plot_url': plot_url})
 
     except Exception as e:
@@ -128,11 +142,13 @@ def transit_waveforms_route():
 
 # --- HELPER FUNCTIONS ---
 
+
 def convert_to_degrees(position):
     """
     Convert position string like '20° 26\' 27.06" Aries' to degrees as float.
     """
-    match = re.match(r"(\d+)°\s*(\d+)'?\s*(\d+(?:\.\d+)?)?\"?\s*([A-Za-z]+)", position)
+    match = re.match(
+        r"(\d+)°\s*(\d+)'?\s*(\d+(?:\.\d+)?)?\"?\s*([A-Za-z]+)", position)
     if match:
         degrees = int(match.group(1))
         minutes = int(match.group(2))
@@ -173,6 +189,7 @@ def generate_plot(positions):
 
     ax.set_ylim(0, 1.3)
     ax.set_xticklabels([])
+    ax.set_yticklabels([])
     ax.grid(color='gray', linestyle='--', linewidth=1)
     ax.spines['polar'].set_visible(False)
 
@@ -190,11 +207,26 @@ def generate_aspect_plot(positions, selected_aspects):
     """
     fig, ax = plt.subplots(figsize=(22, 22), subplot_kw={'projection': 'polar'})
 
+    # Plot the zodiac signs
+    num_signs = len(zodiac_signs)
+    degrees_per_sign = 360 / num_signs
+    colors = plt.cm.tab20(np.linspace(0, 1, num_signs))
+
+    for i, (sign, color) in enumerate(zip(zodiac_signs, colors)):
+        angle = (i * degrees_per_sign + degrees_per_sign / 2) * (np.pi / 180)
+        ax.text(angle, 1.2, sign, horizontalalignment='center',
+                verticalalignment='center', fontsize=19, color=color)
+
+    # Plot planet positions
     planet_angles = {}
     for planet, degree in positions.items():
         theta = (degree % 360) * (np.pi / 180)
+        symbol = planet_symbols[planet]
+        ax.text(theta, 1.05, symbol, horizontalalignment='center',
+                verticalalignment='center', fontsize=24, color='black')
         planet_angles[planet] = theta
 
+    # Plot aspects
     for planet1, angle1 in planet_angles.items():
         for planet2, angle2 in planet_angles.items():
             if planet1 != planet2:
@@ -204,15 +236,18 @@ def generate_aspect_plot(positions, selected_aspects):
                 for aspect in selected_aspects:
                     aspect_angle = aspects[aspect]
                     if abs(difference - aspect_angle) <= orb[aspect]:
-                        ax.plot([angle1, angle2], [1.0, 1.0], linestyle='-', color='black')
+                        ax.plot([angle1, angle2], [1.0, 1.0],
+                                linestyle='-', color='black')
 
     ax.set_ylim(0, 1.3)
     ax.set_xticklabels([])
+    ax.set_yticklabels([])
     ax.grid(color='gray', linestyle='--', linewidth=1)
     ax.spines['polar'].set_visible(False)
 
     aspect_plot_path = os.path.join('static', 'aspect_plot.png')
-    plt.savefig(aspect_plot_path, format='png', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig(aspect_plot_path, format='png',
+                bbox_inches='tight', pad_inches=0.1)
     plt.close(fig)
 
     return '/static/aspect_plot.png'

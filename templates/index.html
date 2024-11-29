@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Natal Chart & Transit Waveform Generator</title>
+    <title>Natal Chart Generator</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
     <style>
+        /* (Your existing styles) */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -20,95 +20,22 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        h1, h2, h3 {
-            text-align: center;
-            color: #333;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-        .form-group input,
-        .form-group select,
-        .form-group textarea,
-        .form-group button {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .form-group button {
-            background-color: navajowhite;
-            color: black;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .form-group button:hover {
-            background-color: lightcoral;
-            color: white;
-        }
-        .results {
-            margin-top: 20px;
-        }
-        #map {
-            height: 400px;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        .image-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            margin: 20px auto;
-            cursor: pointer;
-        }
-        .image-container img {
-            width: 100%;
-            height: auto;
-            border: 2px solid #333;
-        }
-        .fullsize-image {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #fff;
-            border: 2px solid #000;
-            z-index: 1000;
-        }
-        .fullsize-image img {
-            max-width: 100vw;
-            max-height: 100vh;
-        }
-        .fullsize-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-        }
+        /* Rest of your styles */
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Natal Chart & Transit Waveform Generator</h1>
 
-        <!-- Section 1: Natal Chart -->
-        <h2>Generate Natal Chart</h2>
-        <form id="natal-chart-form">
+    <!-- Natal Chart Calculation Form -->
+    <div class="container">
+        <h1>Natal Chart</h1>
+        <form id="natal-form">
             <div id="map"></div>
+            <div>
+                <label style="display: none;" for="chartName">Chart Name:</label>
+                <input style="display: none;" type="text" id="chartName" name="chartName" placeholder="Enter chart name">
+            </div>
             <div class="form-group">
-                <label for="dob">Date of Birth (DD.MM.YYYY):</label>
+                <label for="dob">Date of Birth (YYYY-MM-DD):</label>
                 <input type="date" id="dob" name="dob" required>
             </div>
             <div class="form-group">
@@ -117,116 +44,307 @@
             </div>
             <div class="form-group">
                 <label for="lat">Latitude:</label>
-                <input type="text" id="lat" name="lat" placeholder="Click on the map to set latitude" readonly>
+                <input type="text" id="lat" name="lat" placeholder="e.g., 44.86833" readonly>
             </div>
             <div class="form-group">
                 <label for="lon">Longitude:</label>
-                <input type="text" id="lon" name="lon" placeholder="Click on the map to set longitude" readonly>
+                <input type="text" id="lon" name="lon" placeholder="e.g., 13.84806" readonly>
             </div>
-            <button type="submit">Generate Natal Chart</button>
+            <div class="form-group">
+                <button type="submit">Compute Celestial Alignments</button>
+            </div>
         </form>
+    </div>
 
-        <!-- Natal Chart Results -->
-        <div class="results" id="natal-chart-results">
-            <h3>Natal Chart Results</h3>
-            <ul id="natal-chart-data"></ul>
-            <button id="copy-natal-chart" style="display: none;">Copy Chart Data</button>
+    <!-- Display Natal Chart Results -->
+    <div class="container">
+        <div class="results" id="results">
+            <!-- Results will be displayed here -->
         </div>
     </div>
 
+    <!-- Plot Generation Form -->
     <div class="container">
-        <!-- Section 2: Aspect Plotting -->
-        <h2>Generate Zodiac & Aspect Diagrams</h2>
-        <form id="aspect-plot-form">
+        <h2>Generate Zodiac and Aspect Plots</h2>
+        <form id="plot-form">
+            <h3>Enter Planetary Positions</h3>
+            {% for planet in planets %}
             <div class="form-group">
-                <h3>Enter Planetary Positions</h3>
-                <textarea id="planet-positions" rows="6" placeholder='{"Sun": 0, "Moon": 45, "Mars": 120}' required></textarea>
+                <label for="{{ planet }}_pos">{{ planet }} Position:</label>
+                <input type="text" id="{{ planet }}_pos" name="{{ planet }}_pos" placeholder='e.g., 20° 26\' 27.06" Aries' required>
             </div>
+            {% endfor %}
+            <h3>Select Aspects to Display</h3>
+            {% for aspect in aspects %}
             <div class="form-group">
-                <h3>Select Aspects to Display</h3>
-                <div>
-                    {% for aspect in aspects %}
-                    <label>
-                        <input type="checkbox" name="aspects" value="{{ aspect }}"> {{ aspect }}
-                    </label>
-                    {% endfor %}
-                </div>
+                <label for="{{ aspect }}">{{ aspect }}</label>
+                <input type="checkbox" id="{{ aspect }}" name="{{ aspect }}">
             </div>
-            <button type="submit">Generate Diagrams</button>
+            {% endfor %}
+            <div class="form-group">
+                <button type="submit">Forge Cosmic Diagrams</button>
+            </div>
         </form>
+    </div>
 
-        <!-- Aspect Plot Results -->
-        <div class="results" id="aspect-results">
-            <h3>Aspect Diagrams</h3>
-            <div id="aspect-diagram" class="image-container">
-                <img src="" alt="Zodiac Diagram" style="display: none;">
-            </div>
-            <div id="aspect-lines" class="image-container">
-                <img src="" alt="Aspect Diagram" style="display: none;">
-            </div>
+    <!-- Display Plots -->
+    <div class="container">
+        <div id="plot-container">
+            <!-- Plots will be inserted here -->
         </div>
     </div>
 
+    <!-- Transit Waveforms Form -->
     <div class="container">
-        <!-- Section 3: Transit Waveforms -->
         <h2>Generate Transit Waveforms</h2>
         <form id="transit-form">
             <div class="form-group">
                 <label for="start_date">Start Date:</label>
-                <input type="date" id="start_date" required>
+                <input type="date" id="start_date" name="start_date" required>
             </div>
             <div class="form-group">
                 <label for="end_date">End Date:</label>
-                <input type="date" id="end_date" required>
+                <input type="date" id="end_date" name="end_date" required>
             </div>
             <div class="form-group">
-                <label for="natal_chart">Natal Chart (JSON):</label>
-                <textarea id="natal_chart" rows="6" placeholder='{"Sun": 0, "Moon": 45, "Mars": 120}' required></textarea>
+                <label for="natal_chart">Natal Chart (Positions):</label>
+                <textarea id="natal_chart" name="natal_chart" rows="4" placeholder='{"Sun": "20° 26\' 27.06\" Aries", "Moon": "5° 12\' 15.00\" Taurus", ...}' required></textarea>
             </div>
-            <button type="submit">Generate Waveforms</button>
+            <div class="form-group">
+                <button type="submit">Generate Waveforms</button>
+            </div>
         </form>
+    </div>
 
-        <!-- Transit Waveform Results -->
-        <div class="results" id="transit-waveform-result">
+    <!-- Display Transit Waveform Plot -->
+    <div class="container">
+        <div id="waveform-result">
             <h3>Transit Waveform Plot</h3>
             <img id="waveform-plot" src="" alt="Transit Waveforms" style="max-width: 100%; display: none;">
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         // Initialize the map
-        const map = L.map('map').setView([44.86833, 13.84806], 13);
+        var map = L.map('map').setView([44.86833, 13.84806], 13); // Default location
+
+        // Add a tile layer to the map
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, USGS, NOAA',
             maxZoom: 18
         }).addTo(map);
 
-        const marker = L.marker([44.86833, 13.84806]).addTo(map);
+        var marker = L.marker([44.86833, 13.84806]).addTo(map);
 
-        map.on('click', function (e) {
-            const { lat, lng } = e.latlng;
-            document.getElementById('lat').value = lat;
-            document.getElementById('lon').value = lng;
-            marker.setLatLng([lat, lng]);
+        map.on('click', function(e) {
+            var latlng = e.latlng;
+            document.getElementById('lat').value = latlng.lat;
+            document.getElementById('lon').value = latlng.lng;
+            marker.setLatLng(latlng);
         });
 
-        // Handle Natal Chart Submission
-        document.getElementById('natal-chart-form').addEventListener('submit', function (e) {
+        function showFullSizeImage(url) {
+            // Implement if needed
+        }
+
+        function hideFullSizeImage() {
+            // Implement if needed
+        }
+    </script>
+    <script>
+        // Handle Natal Chart Calculation Form
+        document.getElementById('natal-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            // Fetch and process natal chart...
+            var formData = new FormData(this);
+            var data = Object.fromEntries(formData);
+
+            // Ensure lat and lon are numbers
+            if (data.lat) data.lat = parseFloat(data.lat);
+            if (data.lon) data.lon = parseFloat(data.lon);
+
+            fetch('/calculate_natal_chart', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Response received: ", data);  // Debug log to check response
+                var resultDiv = document.getElementById('results');
+                resultDiv.innerHTML = ''; // Clear previous results
+                if (data.success) {
+                    var resultsHtml = '<h2>' + data.chartName + '</h2><ul>';
+                    var chartData = ''; // Store the chart data to copy
+                    for (var body in data.chart) {
+                        var entry = '<li><span>' + body + ':</span> ' + data.chart[body] + '</li>';
+                        resultsHtml += entry;
+                        chartData += body + ': ' + data.chart[body] + '\n'; // Format chart data for copying
+                    }
+                    resultsHtml += '</ul>';
+                    resultDiv.innerHTML = resultsHtml;
+
+                    // Populate input fields with planetary positions
+                    populatePlanetaryPositions(data.chart);
+                } else {
+                    resultDiv.innerHTML = '<p>Error: ' + data.error + '</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                var resultDiv = document.getElementById('results');
+                resultDiv.innerHTML = '<p>An error occurred while processing your request.</p>';
+            });
         });
 
-        // Handle Aspect Plot Submission
-        document.getElementById('aspect-plot-form').addEventListener('submit', function (e) {
+        function populatePlanetaryPositions(chart) {
+            // Define the mapping between planets and their input field IDs
+            var fieldIds = {
+                'Jupiter': 'Jupiter_pos',
+                'Mars': 'Mars_pos',
+                'Mercury': 'Mercury_pos',
+                'Moon': 'Moon_pos',
+                'Neptune': 'Neptune_pos',
+                'Pluto': 'Pluto_pos',
+                'Saturn': 'Saturn_pos',
+                'Sun': 'Sun_pos',
+                'Uranus': 'Uranus_pos',
+                'Venus': 'Venus_pos'
+            };
+
+            // Loop through the chart data and set values in input fields
+            for (var planet in chart) {
+                var fieldId = fieldIds[planet];
+                var inputField = document.getElementById(fieldId);
+                if (inputField) {
+                    inputField.value = chart[planet]; // Set the value in the corresponding input field
+                }
+            }
+        }
+
+        // Handle Plot Generation Form
+        document.getElementById('plot-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            // Fetch and display aspect plots...
+            generatePlots();
         });
 
-        // Handle Transit Waveforms Submission
-        document.getElementById('transit-form').addEventListener('submit', function (e) {
+        function generatePlots() {
+            // Collect planetary positions from the input fields
+            var positions = {};
+            var fieldIds = {
+                'Jupiter': 'Jupiter_pos',
+                'Mars': 'Mars_pos',
+                'Mercury': 'Mercury_pos',
+                'Moon': 'Moon_pos',
+                'Neptune': 'Neptune_pos',
+                'Pluto': 'Pluto_pos',
+                'Saturn': 'Saturn_pos',
+                'Sun': 'Sun_pos',
+                'Uranus': 'Uranus_pos',
+                'Venus': 'Venus_pos'
+            };
+            for (var planet in fieldIds) {
+                var inputField = document.getElementById(fieldIds[planet]);
+                if (inputField && inputField.value) {
+                    positions[planet] = inputField.value;
+                }
+            }
+
+            // Collect selected aspects
+            var selectedAspects = [];
+            var aspects = ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile'];
+            for (var i = 0; i < aspects.length; i++) {
+                var aspect = aspects[i];
+                var checkbox = document.getElementById(aspect);
+                if (checkbox && checkbox.checked) {
+                    selectedAspects.push(aspect);
+                }
+            }
+
+            // Send positions and selectedAspects to /generate_plot
+            var data = {
+                positions: positions,
+                aspects: selectedAspects
+            };
+
+            fetch('/generate_plot', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.plot_url && data.aspect_plot_url) {
+                    // Display the plots
+                    var plotContainer = document.getElementById('plot-container');
+                    plotContainer.innerHTML = `
+                        <div class="image-container" onclick="showFullSizeImage('${data.plot_url}')">
+                            <img src="${data.plot_url}" alt="Natal Chart">
+                        </div>
+                        <div class="image-container" onclick="showFullSizeImage('${data.aspect_plot_url}')">
+                            <img src="${data.aspect_plot_url}" alt="Aspect Chart">
+                        </div>
+                    `;
+                } else {
+                    alert('Error generating plots: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while generating plots.');
+            });
+        }
+
+        // Handle Transit Waveforms Form
+        document.getElementById('transit-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            // Fetch and display transit waveforms...
+
+            // Collect form data
+            const startDate = document.getElementById("start_date").value;
+            const endDate = document.getElementById("end_date").value;
+            const natalChart = document.getElementById("natal_chart").value;
+
+            // Validate JSON input
+            let natalChartData;
+            try {
+                natalChartData = JSON.parse(natalChart);
+            } catch (error) {
+                alert("Invalid JSON format for natal chart. Please correct it.");
+                return;
+            }
+
+            // Send the data to the /transit_waveforms route
+            fetch("/transit_waveforms", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    start_date: startDate,
+                    end_date: endDate,
+                    natal_chart: natalChartData,
+                }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.error) {
+                        alert("Error: " + data.error);
+                    } else {
+                        // Display the waveform plot
+                        const plotImg = document.getElementById("waveform-plot");
+                        plotImg.src = data.plot_url;
+                        plotImg.style.display = "block";
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("An error occurred while generating the waveforms.");
+                });
         });
     </script>
 </body>
