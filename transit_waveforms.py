@@ -19,9 +19,6 @@ def calculate_transit_waveforms(natal_positions, start_date, end_date, transitin
     current_date = start_date
     transits = []
 
-    def calculate_transit_waveforms(natal_positions, start_date, end_date, transiting_planets, selected_aspects):
-    # ... existing code ...
-
     while current_date <= end_date:
         for planet in transiting_planets:
             transit_position = natal_chart.get_transit_position(current_date, planet)
@@ -42,10 +39,10 @@ def calculate_transit_waveforms(natal_positions, start_date, end_date, transitin
                             'aspect': aspect_name,
                             'intensity': intensity,
                         })
+                        # Optional: Print transit details for debugging
+                        # print(f"Transit: {transits[-1]}")
 
         current_date += timedelta(days=1)
-
-    # ... rest of the code ...
 
     print(f"Total transits calculated: {len(transits)}")
     return transits
