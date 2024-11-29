@@ -11,7 +11,7 @@ aspects = {"Conjunction": 0, "Opposition": 180, "Trine": 120,
 orb = {"Conjunction": 8, "Opposition": 8, "Trine": 8,
        "Square": 8, "Sextile": 6}
 
-def calculate_transit_waveforms(natal_positions, start_date, end_date):
+def calculate_transit_waveforms(natal_positions, start_date, end_date, transiting_planets, selected_aspects):
     """
     Calculate transit interactions for a natal chart over a date range.
     """
@@ -19,13 +19,17 @@ def calculate_transit_waveforms(natal_positions, start_date, end_date):
     current_date = start_date
     transits = []
 
+    def calculate_transit_waveforms(natal_positions, start_date, end_date, transiting_planets, selected_aspects):
+    # ... existing code ...
+
     while current_date <= end_date:
-        for planet in planets:
+        for planet in transiting_planets:
             transit_position = natal_chart.get_transit_position(current_date, planet)
 
             for natal_planet, natal_position in natal_positions.items():
-                for aspect_name, exact_angle in aspects.items():
-                    angle_diff = abs((transit_position - natal_position) % 360)
+                for aspect_name in selected_aspects:
+                    exact_angle = aspects[aspect_name]
+                    angle_diff = abs((transit_position - natal_position - exact_angle) % 360)
                     if angle_diff > 180:
                         angle_diff = 360 - angle_diff  # Normalize angle difference
 
@@ -38,9 +42,10 @@ def calculate_transit_waveforms(natal_positions, start_date, end_date):
                             'aspect': aspect_name,
                             'intensity': intensity,
                         })
-                        print(f"Transit: {transits[-1]}")
 
         current_date += timedelta(days=1)
+
+    # ... rest of the code ...
 
     print(f"Total transits calculated: {len(transits)}")
     return transits

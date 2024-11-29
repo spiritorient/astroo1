@@ -205,6 +205,7 @@
     <h2>Generate Transit Waveforms</h2>
     <p>After calculating your natal chart, you can generate transit waveforms for a specific date range.</p>
     <form id="transit-form">
+        <!-- Start and End Date Fields -->
         <div class="form-group">
             <label for="start_date">Start Date:</label>
             <input type="date" id="start_date" name="start_date" required>
@@ -213,13 +214,36 @@
             <label for="end_date">End Date:</label>
             <input type="date" id="end_date" name="end_date" required>
         </div>
-        
+
+        <!-- Natal Planets Selection -->
         <h3>Select Natal Planets to Include</h3>
         <div class="form-group">
             {% for planet in planets %}
             <label>
                 <input type="checkbox" name="natal_planets" value="{{ planet }}" checked>
                 {{ planet }}
+            </label><br>
+            {% endfor %}
+        </div>
+
+        <!-- Transiting Planets Selection -->
+        <h3>Select Transiting Planets to Include</h3>
+        <div class="form-group">
+            {% for planet in planets %}
+            <label>
+                <input type="checkbox" name="transiting_planets" value="{{ planet }}" checked>
+                {{ planet }}
+            </label><br>
+            {% endfor %}
+        </div>
+
+        <!-- Aspects Selection -->
+        <h3>Select Aspects to Consider</h3>
+        <div class="form-group">
+            {% for aspect in aspects %}
+            <label>
+                <input type="checkbox" name="transit_aspects" value="{{ aspect }}" checked>
+                {{ aspect }}
             </label><br>
             {% endfor %}
         </div>
@@ -456,7 +480,16 @@ document.getElementById('transit-form').addEventListener('submit', function(e) {
         return;
     }
 
-    // Filter the natal chart data to only include selected planets
+    // Collect selected transiting planets
+    const transitingPlanetCheckboxes = document.querySelectorAll('input[name="transiting_planets"]:checked');
+    const selectedTransitingPlanets = Array.from(transitingPlanetCheckboxes).map(checkbox => checkbox.value);
+
+    if (selectedTransitingPlanets.length === 0) {
+        alert("Please select at least one transiting planet.");
+        return;
+    }
+
+    // Filter the natal chart data to only include selected natal planets
     const filteredNatalChartData = {};
     for (const planet of selectedNatalPlanets) {
         if (natalChartData.hasOwnProperty(planet)) {
@@ -464,17 +497,31 @@ document.getElementById('transit-form').addEventListener('submit', function(e) {
         }
     }
 
+    // Collect selected aspects
+    const aspectCheckboxes = document.querySelectorAll('input[name="transit_aspects"]:checked');
+    const selectedAspects = Array.from(aspectCheckboxes).map(checkbox => checkbox.value);
+
+    if (selectedAspects.length === 0) {
+        alert("Please select at least one aspect.");
+    return;
+    }
+
+    // Prepare data to send to the server
+    const requestData = {
+        start_date: startDate,
+        end_date: endDate,
+        natal_chart: filteredNatalChartData,
+        transiting_planets: selectedTransitingPlanets,
+        aspects: selectedAspects
+    };
+
     // Send the data to the /transit_waveforms route
     fetch("/transit_waveforms", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-            start_date: startDate,
-            end_date: endDate,
-            natal_chart: filteredNatalChartData,
-        }),
+        body: JSON.stringify(requestData),
     })
     .then((response) => response.json())
     .then((data) => {

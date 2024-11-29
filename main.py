@@ -118,8 +118,10 @@ def transit_waveforms_route():
         natal_chart_positions = data.get('natal_chart')  # Natal chart as {planet: position strings}
         start_date = datetime.strptime(data.get('start_date'), '%Y-%m-%d')
         end_date = datetime.strptime(data.get('end_date'), '%Y-%m-%d')
+        selected_transiting_planets = data.get('transiting_planets')  # List of transiting planets
+        selected_aspects = data.get('aspects')  # List of aspects
 
-        if not natal_chart_positions or not start_date or not end_date:
+        if not natal_chart_positions or not start_date or not end_date or not selected_transiting_planets or not selected_aspects:
             return jsonify({'error': 'Invalid input data'}), 400
 
         # Convert natal chart positions from strings to degrees
@@ -129,7 +131,7 @@ def transit_waveforms_route():
 
         # Use the transit_waveforms module for calculations
         transits = transit_waveforms.calculate_transit_waveforms(
-            natal_positions, start_date, end_date)
+            natal_positions, start_date, end_date, selected_transiting_planets, selected_aspects)
 
         # Generate waveform plot
         plot_url = transit_waveforms.generate_transit_waveform_plot(
