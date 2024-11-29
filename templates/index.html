@@ -5,6 +5,7 @@
     <title>Natal Chart Generator</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
     <style>
+        /* Your existing styles remain unchanged */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -202,6 +203,7 @@
     <!-- Transit Waveforms Form -->
     <div class="container">
         <h2>Generate Transit Waveforms</h2>
+        <p>After calculating your natal chart, you can generate transit waveforms for a specific date range.</p>
         <form id="transit-form">
             <div class="form-group">
                 <label for="start_date">Start Date:</label>
@@ -211,10 +213,8 @@
                 <label for="end_date">End Date:</label>
                 <input type="date" id="end_date" name="end_date" required>
             </div>
-            <div class="form-group">
-                <label for="natal_chart">Natal Chart (Positions):</label>
-                <textarea id="natal_chart" name="natal_chart" rows="4" placeholder='{"Sun": "20° 26\' 27.06\" Aries", "Moon": "5° 12\' 15.00\" Taurus", ...}' required></textarea>
-            </div>
+            <!-- Hidden input to store natal chart data -->
+            <input type="hidden" id="natal_chart" name="natal_chart">
             <div class="form-group">
                 <button type="submit">Generate Waveforms</button>
             </div>
@@ -282,6 +282,9 @@
                 var resultDiv = document.getElementById('results');
                 resultDiv.innerHTML = ''; // Clear previous results
                 if (data.success) {
+                    // Store the calculated chart data in a global variable
+                    window.calculatedNatalChart = data.chart;
+
                     var resultsHtml = '<h2>' + data.chartName + '</h2><ul>';
                     var chartData = ''; // Store the chart data to copy
                     for (var body in data.chart) {
@@ -294,6 +297,10 @@
 
                     // Populate input fields with planetary positions
                     populatePlanetaryPositions(data.chart);
+
+                    // Auto-fill natal chart data for transit waveforms
+                    autoFillNatalChartData();
+
                 } else {
                     resultDiv.innerHTML = '<p>Error: ' + data.error + '</p>';
                 }
@@ -328,6 +335,14 @@
                     inputField.value = chart[planet]; // Set the value in the corresponding input field
                 }
             }
+        }
+
+        function autoFillNatalChartData() {
+            // Convert the calculatedNatalChart object to JSON string
+            var natalChartJSON = JSON.stringify(window.calculatedNatalChart);
+            // Set the hidden input value
+            var natalChartInput = document.getElementById('natal_chart');
+            natalChartInput.value = natalChartJSON;
         }
 
         // Handle Plot Generation Form
@@ -412,14 +427,12 @@
             // Collect form data
             const startDate = document.getElementById("start_date").value;
             const endDate = document.getElementById("end_date").value;
-            const natalChart = document.getElementById("natal_chart").value;
 
-            // Validate JSON input
-            let natalChartData;
-            try {
-                natalChartData = JSON.parse(natalChart);
-            } catch (error) {
-                alert("Invalid JSON format for natal chart. Please correct it.");
+            // Use the stored calculatedNatalChart directly
+            const natalChartData = window.calculatedNatalChart;
+
+            if (!natalChartData) {
+                alert("Please calculate your natal chart first.");
                 return;
             }
 

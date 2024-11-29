@@ -147,21 +147,34 @@ def convert_to_degrees(position):
     """
     Convert position string like '20° 26\' 27.06" Aries' to degrees as float.
     """
-    match = re.match(
-        r"(\d+)°\s*(\d+)'?\s*(\d+(?:\.\d+)?)?\"?\s*([A-Za-z]+)", position)
+    # Enhanced regex pattern
+    pattern = r"""
+        (\d+\.?\d*)        # Degrees, which can be integer or float
+        °\s*
+        (?:(\d+\.?\d*)')?  # Optional minutes
+        \s*
+        (?:(\d+\.?\d*)")?  # Optional seconds
+        \s*
+        ([A-Za-z]+)        # Zodiac sign
+    """
+    match = re.match(pattern, position.strip(), re.VERBOSE)
     if match:
-        degrees = int(match.group(1))
-        minutes = int(match.group(2))
+        degrees = float(match.group(1))
+        minutes = float(match.group(2)) if match.group(2) else 0.0
         seconds = float(match.group(3)) if match.group(3) else 0.0
         sign = match.group(4).capitalize()
         total_degrees = degrees + minutes / 60 + seconds / 3600
 
         # Calculate the degree offset based on the zodiac sign
-        sign_index = zodiac_signs.index(sign)
-        sign_offset = sign_index * 30
+        try:
+            sign_index = zodiac_signs.index(sign)
+            sign_offset = sign_index * 30
+        except ValueError:
+            raise ValueError(f"Invalid zodiac sign: '{sign}' in position '{position}'")
 
         return total_degrees + sign_offset
-    return 0
+    else:
+        raise ValueError(f"Invalid position format: '{position}'")
 
 
 def generate_plot(positions):

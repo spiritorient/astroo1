@@ -47,7 +47,7 @@ def calculate_transit_waveforms(natal_positions, start_date, end_date):
 
 def generate_transit_waveform_plot(transits, start_date, end_date):
     """
-    Generate a waveform plot based on transit data.
+    Generate a high-resolution waveform plot based on transit data.
     """
     print("Generating transit waveform plot...")
     dates = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
@@ -61,13 +61,15 @@ def generate_transit_waveform_plot(transits, start_date, end_date):
 
     print(f"Prepared intensity data.")
 
-    fig, ax = plt.subplots(figsize=(12, 6))
+    # Increase figure size and DPI for higher resolution
+    fig, ax = plt.subplots(figsize=(18, 9), dpi=200)  # Adjust figsize and dpi as needed
+
     for label, intensity in intensity_data.items():
         ax.plot(dates, intensity, label=label)
 
-    ax.set_title("Transit Waveforms")
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Intensity")
+    ax.set_title("Transit Waveforms", fontsize=16)
+    ax.set_xlabel("Date", fontsize=14)
+    ax.set_ylabel("Intensity", fontsize=14)
     ax.legend(loc='upper right', fontsize='small')
     ax.grid(True)
 

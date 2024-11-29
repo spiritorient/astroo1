@@ -7,7 +7,7 @@ def degrees_to_dms(degrees):
     d = int(degrees)
     m = int((degrees - d) * 60)
     s = (degrees - d - m / 60) * 3600
-    return f"{d}° {m}' {s:.2f}\""
+    return f"{d}° {m}' {s:.4f}\""
 
 def degrees_to_zodiac(degrees):
     signs = [
