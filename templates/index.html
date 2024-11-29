@@ -5,7 +5,6 @@
     <title>Natal Chart Generator</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
     <style>
-        /* (Your existing styles) */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -20,11 +19,117 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        /* Rest of your styles */
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .form-group button,
+        input[type="submit"] {
+            padding: 10px 20px;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .form-group button:hover,
+        input[type="submit"]:hover {
+            background-color: navajowhite;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .results h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .results ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .results li {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        .results li span {
+            font-weight: bold;
+            color: #333;
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .image-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            border: 2px solid #000;
+            overflow: hidden;
+            cursor: pointer;
+            margin: 20px auto;
+        }
+        .image-container img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+        .fullsize-image {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid #000;
+            background: #fff;
+            z-index: 1000;
+        }
+        .fullsize-image img {
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        .fullsize-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        /* Hide Leaflet attribution controls */
+        .leaflet-control-attribution {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
-
     <!-- Natal Chart Calculation Form -->
     <div class="container">
         <h1>Natal Chart</h1>
