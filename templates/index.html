@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natal Chart Generator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .form-group button,
+        input[type="submit"] {
+            padding: 10px 20px;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .form-group button:hover,
+        input[type="submit"]:hover {
+            background-color: navajowhite;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .results h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .results ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .results li {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        .results li span {
+            font-weight: bold;
+            color: #333;
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .image-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            border: 2px solid #000;
+            overflow: hidden;
+            cursor: pointer;
+            margin: 20px auto;
+        }
+        .image-container img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+        .fullsize-image {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid #000;
+            background: #fff;
+            z-index: 1000;
+        }
+        .fullsize-image img {
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        .fullsize-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        /* Hide Leaflet attribution controls */
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    {% if plot_url %}
+    <div class="container">
+        {% if plot_url %}
+        <div class="image-container" onclick="showFullSizeImage('{{ plot_url }}')">
+            <img src="{{ plot_url }}" alt="Natal Chart">
+        </div>
+            {% endif %}
+        <div id="fullsize-overlay" class="fullsize-overlay" onclick="hideFullSizeImage()">
+        </div>
+        <div id="fullsize-image" class="fullsize-image">
+            <img id="fullsize-img" src="" alt="Full Size Chart">
+        </div>
+            {% if aspect_plot_url %}
+        <div class="image-container" onclick="showFullSizeImage('{{ aspect_plot_url }}')">
+            <img src="{{ aspect_plot_url }}" alt="Aspect Chart">
+        </div>
+            {% endif %}
+    </div>
+    {% endif %}
+    <br>
+    <div class="container">
+        <h1>Natal Chart</h1>
+        <form>
+            <div id="map"></div>
+            <div>
+                <label style="display: none;" for="chartName">Chart Name:</label>
+                <input style="display: none;" type="text" id="chartName" name="chartName" placeholder="Enter chart name">
+            </div>
+            <div class="form-group">
+                <label for="dob">Date of Birth (DD.MM.YYYY):</label>
+                <input type="text" id="dob" name="dob" placeholder="e.g., 25.11.1987" required>
+            </div>
+            <div class="form-group">
+                <label for="tob">Time of Birth:</label>
+                <input type="time" id="tob" name="tob" required>
+            </div>
+            <div class="form-group">
+                <label for="lat">Latitude:</label>
+                <input type="text" id="lat" name="lat" placeholder="e.g., 44.86833" readonly>
+            </div>
+            <div class="form-group">
+                <label for="lon">Longitude:</label>
+                <input type="text" id="lon" name="lon" placeholder="e.g., 13.84806" readonly>
+            </div>
+            <div class="form-group">
+                <button type="submit">Compute Celestial Alignments</button>
+            </div>
+        </form>
+    </div>
+    <br>
+    <div class="container">
+    <div class="results" id="results">
+            <!-- Popout button will be added dynamically -->
+    </div>
+    </div>
+    <br>
+    <div class="container">
+        <h1 style="display: none;">Natal Chart Generator</h1>
+        <form method="POST" action="/">
+            <h2 style="display: none;">Enter Planetary Positions</h2>
+            {% for planet in planets %}
+            <div style="display: none;" class="form-group">
+                <label for="{{ planet }}_pos">{{ planet }} Position:</label>
+                <input type="text" id="{{ planet }}_pos" name="{{ planet }}_pos" placeholder="20° 26' 27.06" required>
+                <!-- Zodiac sign dropdown removed as signs are handled in data -->
+            </div>
+            {% endfor %}
+            <h3>Select Aspects to Display</h3>
+            {% for aspect in aspects %}
+            <div class="form-group">
+                <label for="{{ aspect }}">{{ aspect }}</label>
+                <input type="checkbox" id="{{ aspect }}" name="{{ aspect }}">
+            </div>
+            {% endfor %}
+            <div class="form-group">
+                <button type="submit">Forge Cosmic Diagrams</button>
+            </div>
+        </form>
+    </div>
+            <button id="copyButton" style="display:none;">Copy to Clipboard</button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([44.86833, 13.84806], 13); // Default location
+
+        // Add a tile layer to the map
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, USGS, NOAA',
+            maxZoom: 18
+        }).addTo(map);
+
+        var marker = L.marker([44.86833, 13.84806]).addTo(map);
+
+        map.on('click', function(e) {
+            var latlng = e.latlng;
+            document.getElementById('lat').value = latlng.lat;
+            document.getElementById('lon').value = latlng.lng;
+            marker.setLatLng(latlng);
+        });
+
+        function showFullSizeImage(url) {
+            document.getElementById('fullsize-img').src = url;
+            document.getElementById('fullsize-image').style.display = 'block';
+            document.getElementById('fullsize-overlay').style.display = 'block';
+        }
+
+        function hideFullSizeImage() {
+            document.getElementById('fullsize-image').style.display = 'none';
+            document.getElementById('fullsize-overlay').style.display = 'none';
+        }
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            var data = Object.fromEntries(formData);
+
+            // Ensure lat and lon are numbers
+            if (data.lat) data.lat = parseFloat(data.lat);
+            if (data.lon) data.lon = parseFloat(data.lon);
+
+            fetch('/calculate_natal_chart', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Response received: ", data);  // Debug log to check response
+                var resultDiv = document.getElementById('results');
+                var copyButton = document.getElementById('copyButton');
+                resultDiv.innerHTML = ''; // Clear previous results
+                if (data.success) {
+                    var resultsHtml = '<h2>' + data.chartName + '</h2><ul>';
+                    var chartData = ''; // Store the chart data to copy
+                    for (var body in data.chart) {
+                        var entry = '<li><span>' + body + ':</span> ' + data.chart[body] + '</li>';
+                        resultsHtml += entry;
+                        chartData += body + ': ' + data.chart[body] + '\n'; // Format chart data for copying
+                    }
+                    resultsHtml += '</ul>';
+                    resultDiv.innerHTML = resultsHtml;
+                    copyButton.style.display = 'none'; // Show the copy button
+
+                    // Add click event listener to the copy button
+                    copyButton.addEventListener('click', function() {
+                        navigator.clipboard.writeText(chartData.trim()).then(function() {
+                            alert('Chart data copied to clipboard!');
+                        }).catch(function(err) {
+                            console.error('Failed to copy: ', err);
+                        });
+                    });
+
+                    // Populate input fields with planetary positions
+                    populatePlanetaryPositions(data.chart);
+                } else {
+                    resultDiv.innerHTML = '<p>Error: ' + data.error + '</p>';
+                    copyButton.style.display = 'none'; // Hide the copy button on error
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                var resultDiv = document.getElementById('results');
+                resultDiv.innerHTML = '<p>An error occurred while processing your request.</p>';
+                document.getElementById('copyButton').style.display = 'none'; // Hide the copy button on error
+            });
+        });
+
+        function populatePlanetaryPositions(chart) {
+            // Define the mapping between planets and their input field IDs
+            var fieldIds = {
+                'Jupiter': 'Jupiter_pos',
+                'Mars': 'Mars_pos',
+                'Mercury': 'Mercury_pos',
+                'Moon': 'Moon_pos',
+                'Neptune': 'Neptune_pos',
+                'Pluto': 'Pluto_pos',
+                'Saturn': 'Saturn_pos',
+                'Sun': 'Sun_pos',
+                'Uranus': 'Uranus_pos',
+                'Venus': 'Venus_pos'
+            };
+
+            // Loop through the chart data and set values in input fields
+            for (var planet in chart) {
+                var fieldId = fieldIds[planet];
+                            var inputField = document.getElementById(fieldId);
+                            if (inputField) {
+                                inputField.value = chart[planet]; // Set the value in the corresponding input field
+                            }
+                        }
+                    }
+                </script>
+
+     </body>
+ </html>
