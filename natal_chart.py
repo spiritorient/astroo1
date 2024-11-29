@@ -1,6 +1,7 @@
 import datetime
 import pytz
 import swisseph as swe
+import numpy as np
 from timezonefinder import TimezoneFinder
 
 def degrees_to_dms(degrees):
@@ -66,7 +67,7 @@ def calculate_transit_waveform(natal_positions, start_date, end_date, interval_h
     """
     from datetime import datetime, timedelta
 
-    swe.set_ephe_path('/path/to/ephemeris/files')  # Ensure Swiss Ephemeris is set up
+    # swe.set_ephe_path('/path/to/ephemeris/files')  # Remove or comment out if not using external files
     julian_start = swe.julday(*[int(x) for x in start_date.split('-')], 0.0)
     julian_end = swe.julday(*[int(x) for x in end_date.split('-')], 0.0)
 
