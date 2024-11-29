@@ -74,7 +74,8 @@ def calculate_transit_waveform(natal_positions, start_date, end_date, interval_h
     transit_data = {planet: [] for planet in natal_positions}
     timeline = []
 
-    for jd in np.arange(julian_start, julian_end, interval_hours / 24.0):
+    step = float(interval_hours) / 24.0  # Ensure the step size is a float
+    for jd in np.arange(julian_start, julian_end, step):
         timeline.append(swe.revjul(jd)[:3])  # Convert Julian day back to date
         for planet, code in natal_positions.items():
             position, _ = swe.calc_ut(jd, code)
