@@ -161,7 +161,7 @@
             </div>
             <div class="form-group">
                 <label for="dob">Date of Birth (DD.MM.YYYY):</label>
-                <input type="text" id="dob" name="dob" placeholder="e.g., 25.11.1987" required>
+                <input type="date" id="dob" name="dob" required>
             </div>
             <div class="form-group">
                 <label for="tob">Time of Birth:</label>
@@ -180,56 +180,62 @@
             </div>
         </form>
     </div>
-    <br>
     <div class="container">
     <div class="results" id="results">
             <!-- Popout button will be added dynamically -->
     </div>
     </div>
+
+    <br>
+
+    <div class="container">
+    <h2>Generate Transit Waveforms</h2>
+    <form id="transit-form">
+        <div class="form-group">
+            <label for="start_date">Start Date:</label>
+            <input type="date" id="start_date" name="start_date" required>
+        </div>
+        <div class="form-group">
+            <label for="end_date">End Date:</label>
+            <input type="date" id="end_date" name="end_date" required>
+        </div>
+        <div class="form-group">
+            <label for="natal_chart">Natal Chart (JSON):</label>
+            <textarea id="natal_chart" name="natal_chart" rows="4" placeholder='{"Sun": 0, "Moon": 30, "Mars": 120}' required></textarea>
+        </div>
+        <button type="submit">Generate Waveforms</button>
+    </form>
+
+    <div id="waveform-result">
+        <h3>Transit Waveform Plot</h3>
+        <img id="waveform-plot" src="" alt="Transit Waveforms" style="max-width: 100%; display: none;">
+    </div>
+</div>
     <br>
     <div class="container">
-        <h1 style="display: none;">Natal Chart Generator</h1>
-        <form method="POST" action="/">
-            <h2 style="display: none;">Enter Planetary Positions</h2>
-            {% for planet in planets %}
-            <div style="display: none;" class="form-group">
-                <label for="{{ planet }}_pos">{{ planet }} Position:</label>
-                <input type="text" id="{{ planet }}_pos" name="{{ planet }}_pos" placeholder="20° 26' 27.06" required>
-                <!-- Zodiac sign dropdown removed as signs are handled in data -->
-            </div>
-            {% endfor %}
-            <h3>Select Aspects to Display</h3>
-            {% for aspect in aspects %}
-            <div class="form-group">
-                <label for="{{ aspect }}">{{ aspect }}</label>
-                <input type="checkbox" id="{{ aspect }}" name="{{ aspect }}">
-            </div>
-            {% endfor %}
-            <div class="form-group">
-                <button type="submit">Forge Cosmic Diagrams</button>
-            </div>
-        </form>
-    </div>
+    <h1 style="display: none;">Natal Chart Generator</h1>
+    <form method="POST" action="/">
+        <h2 style="display: none;">Enter Planetary Positions</h2>
+        {% for planet in planets %}
+        <div style="display: none;" class="form-group">
+            <label for="{{ planet }}_pos">{{ planet }} Position:</label>
+            <input type="text" id="{{ planet }}_pos" name="{{ planet }}_pos" placeholder="20° 26' 27.06" required>
+        </div>
+        {% endfor %}
+        <h3>Select Aspects to Display</h3>
+        {% for aspect in aspects %}
+        <div class="form-group">
+            <label for="{{ aspect }}">{{ aspect }}</label>
+            <input type="checkbox" id="{{ aspect }}" name="{{ aspect }}">
+        </div>
+        {% endfor %}
+        <div class="form-group">
+            <button type="submit">Forge Cosmic Diagrams</button>
+        </div>
+    </form>
+</div>
             <button id="copyButton" style="display:none;">Copy to Clipboard</button>
     </div>
-
-    <div class="form-group">
-    <label for="startDate">Start Date:</label>
-    <input type="date" id="startDate" name="startDate" required>
-</div>
-<div class="form-group">
-    <label for="endDate">End Date:</label>
-    <input type="date" id="endDate" name="endDate" required>
-</div>
-<div class="form-group">
-    <label for="intervalHours">Interval (Hours):</label>
-    <input type="number" id="intervalHours" name="intervalHours" value="6">
-</div>
-<button id="transitWaveformButton" type="button">Generate Transit Waveform</button>
-
-<div class="container">
-    <canvas id="waveformChart" width="800" height="400"></canvas>
-</div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -345,98 +351,53 @@
                             }
                         }
                     }
-                </script>
-    <script>
-    document.getElementById('transitWaveformButton').addEventListener('click', function () {
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        const intervalHours = document.getElementById('intervalHours').value;
 
-        // Placeholder natal positions, replace with actual data if needed
-        const natalPositions = {
-            'Sun': 120.5, // Example values, replace dynamically if available
-            'Moon': 250.7,
-            'Mercury': 90.3,
-            'Venus': 210.8,
-            'Mars': 300.5,
-            'Jupiter': 40.7,
-            'Saturn': 100.2,
-            'Uranus': 180.3,
-            'Neptune': 270.4,
-            'Pluto': 60.8,
-        };
+                    document.getElementById("transit-form").addEventListener("submit", function (e) {
+    e.preventDefault(); // Prevent the default form submission
 
-        fetch('/calculate_transit_waveform', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                startDate,
-                endDate,
-                intervalHours: parseInt(intervalHours, 10),
-                natalPositions, // Replace with dynamic data if needed
-            }),
+    // Collect form data
+    const startDate = document.getElementById("start_date").value;
+    const endDate = document.getElementById("end_date").value;
+    const natalChart = document.getElementById("natal_chart").value;
+
+    // Validate JSON input
+    let natalChartData;
+    try {
+        natalChartData = JSON.parse(natalChart);
+    } catch (error) {
+        alert("Invalid JSON format for natal chart. Please correct it.");
+        return;
+    }
+
+    // Send the data to the /transit_waveforms route
+    fetch("/transit_waveforms", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            start_date: startDate,
+            end_date: endDate,
+            natal_chart: natalChartData,
+        }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.error) {
+                alert("Error: " + data.error);
+            } else {
+                // Display the waveform plot
+                const plotImg = document.getElementById("waveform-plot");
+                plotImg.src = data.plot_url;
+                plotImg.style.display = "block";
+            }
         })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    console.log('Transit Waveform Data:', data.waveform);
-                    renderWaveformChart(data.waveform); // Render the data
-                } else {
-                    console.error('Error:', data.error);
-                }
-            })
-            .catch((error) => console.error('Fetch error:', error));
-    });
-
-    function renderWaveformChart(waveform) {
-        const ctx = document.getElementById('waveformChart').getContext('2d');
-
-        const datasets = Object.keys(waveform.transits).map((planet) => ({
-            label: planet,
-            data: waveform.transits[planet].map((value, index) => ({
-                x: new Date(waveform.timeline[index][0], waveform.timeline[index][1] - 1, waveform.timeline[index][2]),
-                y: value,
-            })),
-            borderColor: getRandomColor(),
-            fill: false,
-        }));
-
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                datasets,
-            },
-            options: {
-                scales: {
-                    x: {
-                        type: 'time',
-                        title: {
-                            display: true,
-                            text: 'Date',
-                        },
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Degrees (Longitude)',
-                        },
-                    },
-                },
-            },
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while generating the waveforms.");
         });
-    }
-
-    function getRandomColor() {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
-    }
-</script>
+});
+                </script>
 
      </body>
  </html>
