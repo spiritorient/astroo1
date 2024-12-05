@@ -7,4 +7,4 @@ timezonefinder
 NumPy
 Matplotlib
 datetime
-plotly.graph_objects
+plotly
