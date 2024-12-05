@@ -1,6 +1,21 @@
+import os
+import platform
+
+# Dynamically configure Matplotlib backend for local development
+if platform.system() == "Darwin":  # macOS system
+    if os.environ.get("FLASK_ENV", "production") == "development":
+        import matplotlib
+        matplotlib.use("MacOSX")  # Interactive backend for local development
+    else:
+        import matplotlib
+        matplotlib.use("Agg")  # Non-GUI backend (default for Render)
+else:
+    import matplotlib
+    matplotlib.use("Agg")  # Safe default backend for non-macOS systems
+
+import matplotlib.pyplot as plt
 from datetime import datetime
 import io
-import os
 import re
 
 import matplotlib.pyplot as plt
