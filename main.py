@@ -1,5 +1,6 @@
 import os
 import platform
+import plotly.graph_objects as go
 
 # Dynamically configure Matplotlib backend for local development
 if platform.system() == "Darwin":  # macOS system
@@ -126,7 +127,7 @@ def generate_zodiac_plot():
 @app.route('/transit_waveforms', methods=['POST'])
 def transit_waveforms_route():
     """
-    Calculate and render transit waveforms on a timeline.
+    Calculate and render transit waveforms as an interactive plot.
     """
     try:
         data = request.json
@@ -148,9 +149,10 @@ def transit_waveforms_route():
         transits = transit_waveforms.calculate_transit_waveforms(
             natal_positions, start_date, end_date, selected_transiting_planets, selected_aspects)
 
-        # Generate waveform plot
-        plot_url = transit_waveforms.generate_transit_waveform_plot(
+        # Generate interactive waveform plot
+        plot_url = transit_waveforms.generate_interactive_transit_waveform_plot(
             transits, start_date, end_date)
+
         return jsonify({'plot_url': plot_url})
 
     except Exception as e:
@@ -281,6 +283,13 @@ def generate_aspect_plot(positions, selected_aspects):
     plt.close(fig)
 
     return '/static/aspect_plot.png'
+
+@app.route('/transit_waveform_plot')
+def show_transit_waveform_plot():
+    """
+    Render the interactive transit waveforms HTML file.
+    """
+    return render_template('transit_waveforms.html')  # Assumes transit_waveforms.html is stored in static
 
 # --- APP RUN ---
 if __name__ == '__main__':

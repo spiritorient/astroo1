@@ -1,6 +1,6 @@
 import os
-from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from datetime import timedelta
 import natal_chart  # Reuse your natal_chart module for transit position calculations
 
 # Define planets, aspects, and orbs
@@ -47,11 +47,10 @@ def calculate_transit_waveforms(natal_positions, start_date, end_date, transitin
     print(f"Total transits calculated: {len(transits)}")
     return transits
 
-def generate_transit_waveform_plot(transits, start_date, end_date):
+def generate_interactive_transit_waveform_plot(transits, start_date, end_date):
     """
-    Generate a high-resolution waveform plot based on transit data.
+    Generate an interactive waveform plot using Plotly.
     """
-    print("Generating transit waveform plot...")
     dates = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
     intensity_data = {}
     for t in transits:
@@ -61,26 +60,32 @@ def generate_transit_waveform_plot(transits, start_date, end_date):
         index = (t['date'] - start_date).days
         intensity_data[key][index] = t['intensity']
 
-    print(f"Prepared intensity data.")
+    # Create the Plotly figure
+    fig = go.Figure()
 
-    # Increase figure size and DPI for higher resolution
-    fig, ax = plt.subplots(figsize=(18, 9), dpi=200)  # Adjust figsize and dpi as needed
-
+    # Add each wave to the plot
     for label, intensity in intensity_data.items():
-        ax.plot(dates, intensity, label=label)
+        fig.add_trace(
+            go.Scatter(
+                x=dates,
+                y=intensity,
+                mode='lines',
+                name=label,
+                hoverinfo='name+y',
+                line=dict(width=2),  # Adjust line thickness
+            )
+        )
 
-    ax.set_title("Transit Waveforms", fontsize=16)
-    ax.set_xlabel("Date", fontsize=14)
-    ax.set_ylabel("Intensity", fontsize=14)
-    ax.legend(loc='upper right', fontsize='small')
-    ax.grid(True)
+    # Customize layout
+    fig.update_layout(
+        title='Interactive Transit Waveforms',
+        xaxis_title='Date',
+        yaxis_title='Intensity',
+        legend_title='Aspects',
+        hovermode='x unified',
+    )
 
-    static_dir = 'static'
-    if not os.path.exists(static_dir):
-        os.makedirs(static_dir)
-    plot_path = os.path.join(static_dir, 'transit_waveforms.png')
-    plt.savefig(plot_path, format='png', bbox_inches='tight')
-    plt.close(fig)
-
-    print(f"Plot saved to {plot_path}")
-    return '/static/transit_waveforms.png'
+    # Save as an HTML file for rendering in a browser
+    html_path = 'static/transit_waveforms.html'
+    fig.write_html(html_path)
+    return html_path
